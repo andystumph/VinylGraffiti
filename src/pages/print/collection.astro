@@ -1,0 +1,81 @@
+---
+import PrintLayout from '../../layouts/PrintLayout.astro';
+import { ensureBootstrapped } from '../../lib/server/bootstrap';
+import { searchInventory } from '../../lib/server/inventory-service';
+
+ensureBootstrapped();
+
+type MediaTypeFilter = 'all' | 'vinyl' | 'cassette' | 'cd';
+
+function formatMediaType(mediaType: MediaTypeFilter): string {
+	if (mediaType === 'all') {
+		return 'All media';
+	}
+
+	if (mediaType === 'cd') {
+		return 'CD';
+	}
+
+	return mediaType.slice(0, 1).toUpperCase() + mediaType.slice(1);
+}
+
+const query = Astro.url.searchParams.get('q') ?? '';
+const mediaType = ((Astro.url.searchParams.get('mediaType') as MediaTypeFilter | null) ?? 'all');
+const items = searchInventory({ query, mediaType });
+const generatedAt = new Date().toLocaleString();
+---
+
+<PrintLayout title="VinylGraffiti | Collection Export">
+	<main class="print-sheet">
+		<header class="print-header">
+			<div>
+				<p class="print-eyebrow">VinylGraffiti Export</p>
+				<h1>My Collection</h1>
+				<p class="print-subtitle">Compact collection summary for printing or saving as PDF.</p>
+			</div>
+			<div class="print-header-actions no-print">
+				<a class="secondary-button print-link-button" href="/">Back to Collection</a>
+				<button type="button" class="secondary-button print-link-button" onclick="window.print()">Print / Save PDF</button>
+			</div>
+		</header>
+
+		<section class="print-summary">
+			<p><strong>Generated:</strong> {generatedAt}</p>
+			<p><strong>Search:</strong> {query.trim() || 'All items'}</p>
+			<p><strong>Media filter:</strong> {formatMediaType(mediaType)}</p>
+			<p><strong>Items:</strong> {items.length}</p>
+		</section>
+
+		{items.length > 0 ? (
+			<table class="print-table">
+				<thead>
+					<tr>
+						<th>Artist</th>
+						<th>Album</th>
+						<th>Media</th>
+						<th>Qty</th>
+						<th>Notes</th>
+					</tr>
+				</thead>
+				<tbody>
+					{items.map((item) => (
+						<tr>
+							<td>{item.artistName}</td>
+							<td>
+								<div class="print-primary">{item.albumTitle}</div>
+								{item.releaseDate && <div class="print-secondary">{item.releaseDate}</div>}
+							</td>
+							<td>{formatMediaType(item.mediaType)}</td>
+							<td>{item.quantity}</td>
+							<td>
+								{[item.location, item.condition, item.notes].filter(Boolean).join(' | ') || '-'}
+							</td>
+						</tr>
+					))}
+				</tbody>
+			</table>
+		) : (
+			<p class="meta">No collection items matched the selected filters.</p>
+		)}
+	</main>
+</PrintLayout>

@@ -1,0 +1,87 @@
+---
+import PrintLayout from '../../layouts/PrintLayout.astro';
+import { ensureBootstrapped } from '../../lib/server/bootstrap';
+import { listWantListItems } from '../../lib/server/want-list-service';
+
+ensureBootstrapped();
+
+type AcquiredMode = 'exclude' | 'include' | 'only';
+type MediaType = 'vinyl' | 'cassette' | 'cd';
+
+function formatMediaType(mediaType: MediaType | null): string {
+	if (!mediaType) {
+		return 'Any format';
+	}
+
+	if (mediaType === 'cd') {
+		return 'CD';
+	}
+
+	return mediaType.slice(0, 1).toUpperCase() + mediaType.slice(1);
+}
+
+const acquiredMode = ((Astro.url.searchParams.get('acquired') as AcquiredMode | null) ?? 'exclude');
+const allItems = listWantListItems();
+const items = allItems.filter((item) => {
+	if (acquiredMode === 'only') {
+		return item.isAcquired;
+	}
+
+	if (acquiredMode === 'exclude') {
+		return !item.isAcquired;
+	}
+
+	return true;
+});
+const generatedAt = new Date().toLocaleString();
+const modeLabel = acquiredMode === 'only' ? 'Acquired only' : acquiredMode === 'include' ? 'All items' : 'Wanted only';
+---
+
+<PrintLayout title="VinylGraffiti | Want List Export">
+	<main class="print-sheet">
+		<header class="print-header">
+			<div>
+				<p class="print-eyebrow">VinylGraffiti Export</p>
+				<h1>Want List</h1>
+				<p class="print-subtitle">Shopping-focused summary for printing or saving as PDF.</p>
+			</div>
+			<div class="print-header-actions no-print">
+				<a class="secondary-button print-link-button" href="/want-list">Back to Want List</a>
+				<button type="button" class="secondary-button print-link-button" onclick="window.print()">Print / Save PDF</button>
+			</div>
+		</header>
+
+		<section class="print-summary">
+			<p><strong>Generated:</strong> {generatedAt}</p>
+			<p><strong>Mode:</strong> {modeLabel}</p>
+			<p><strong>Items:</strong> {items.length}</p>
+		</section>
+
+		{items.length > 0 ? (
+			<table class="print-table">
+				<thead>
+					<tr>
+						<th>Artist</th>
+						<th>Album</th>
+						<th>Format</th>
+						<th>Status</th>
+						<th>Notes</th>
+					</tr>
+				</thead>
+				<tbody>
+					{items.map((item) => (
+						<tr>
+							<td>{item.artist}</td>
+							<td>{item.title}</td>
+							<td>{formatMediaType(item.mediaType)}</td>
+							<td>{item.isAcquired ? 'Acquired' : 'Wanted'}</td>
+							<td>{item.notes || '-'}</td>
+						</tr>
+					))}
+				</tbody>
+			</table>
+		) : (
+			<p class="meta">No want list items matched this export mode.</p>
+		)}
+	</main>
+</PrintLayout>

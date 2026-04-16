@@ -1,0 +1,12 @@
+---
+import Layout from '../layouts/Layout.astro';
+import '../styles/app.css';
+import { InventoryBrowser } from '../components/react/InventoryBrowser';
+import { ensureBootstrapped } from '../lib/server/bootstrap';
+
+ensureBootstrapped();
+---
+
+<Layout title="VinylGraffiti | My Collection">
+	<InventoryBrowser client:load />
+</Layout>

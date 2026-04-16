@@ -1,0 +1,12 @@
+---
+import Layout from '../layouts/Layout.astro';
+import '../styles/app.css';
+import { WantList as WantListPanel } from '../components/react/WantList';
+import { ensureBootstrapped } from '../lib/server/bootstrap';
+
+ensureBootstrapped();
+---
+
+<Layout title="VinylGraffiti | Want List">
+  <WantListPanel client:load />
+</Layout>

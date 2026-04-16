@@ -1,0 +1,12 @@
+---
+import Layout from '../layouts/Layout.astro';
+import '../styles/app.css';
+import { AddInventorySearch } from '../components/react/AddInventorySearch';
+import { ensureBootstrapped } from '../lib/server/bootstrap';
+
+ensureBootstrapped();
+---
+
+<Layout title="VinylGraffiti | Add Inventory">
+  <AddInventorySearch client:load />
+</Layout>
