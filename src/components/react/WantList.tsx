@@ -257,7 +257,7 @@ export function WantList(): React.JSX.Element {
       return;
     }
 
-    const confirmed = window.confirm(`Remove \"${item.title}\" by ${item.artist} from Want List?`);
+    const confirmed = window.confirm(`Remove "${item.title}" by ${item.artist} from Want List?`);
     if (!confirmed) {
       return;
     }
