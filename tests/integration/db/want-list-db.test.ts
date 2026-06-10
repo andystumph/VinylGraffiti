@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-const testDbPath = path.resolve('./data/test-vinyl-graffiti.db');
+const testDbPath = path.resolve('./data/test-want-list-db.db');
 
 beforeEach(async () => {
   process.env.DATABASE_PATH = testDbPath;
