@@ -9,6 +9,7 @@ interface Candidate {
   title: string;
   artist: string;
   releaseDate: string | null;
+  hasCoverArt: boolean | null;
   score: number;
 }
 
@@ -97,6 +98,10 @@ export function AddInventorySearch(): React.JSX.Element {
       },
       body: JSON.stringify({
         releaseMbid: candidate.releaseMbid,
+        releaseGroupMbid: candidate.releaseGroupMbid,
+        title: candidate.title,
+        artist: candidate.artist,
+        releaseDate: candidate.releaseDate,
         mediaType,
         allowDuplicate,
         condition,
@@ -276,6 +281,14 @@ export function AddInventorySearch(): React.JSX.Element {
               event.preventDefault();
               void runSearch();
             }
+
+            if (event.key === 'Escape') {
+              event.preventDefault();
+              setQuery('');
+              setResults([]);
+              setError(null);
+              setSavedMessage(null);
+            }
           }}
           placeholder="Album, artist, or release"
         />
@@ -304,6 +317,26 @@ export function AddInventorySearch(): React.JSX.Element {
             <h3>{item.title}</h3>
             <p>{item.artist}</p>
             <p>{item.releaseDate ?? 'Unknown date'}</p>
+            {(() => {
+              const statusClass =
+                item.hasCoverArt === true
+                  ? 'cover-art-status--available'
+                  : item.hasCoverArt === false
+                    ? 'cover-art-status--missing'
+                    : 'cover-art-status--unknown';
+              const statusLabel =
+                item.hasCoverArt === true
+                  ? 'Available'
+                  : item.hasCoverArt === false
+                    ? 'Not available'
+                    : 'Unknown';
+
+              return (
+                <p className={`cover-art-status ${statusClass}`}>
+                  Cover art: {statusLabel}
+                </p>
+              );
+            })()}
             <p>Match score: {item.score}</p>
             <button
               type="button"

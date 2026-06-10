@@ -194,6 +194,10 @@ async function searchOneVariant(query: string, limit: number): Promise<ImportCan
       score?: number;
       title?: string;
       date?: string;
+      'cover-art-archive'?: {
+        front?: boolean;
+        artwork?: boolean;
+      };
       'release-group'?: { id?: string };
       'artist-credit'?: unknown;
     }>;
@@ -205,6 +209,12 @@ async function searchOneVariant(query: string, limit: number): Promise<ImportCan
     title: release.title ?? 'Unknown Album',
     artist: pickArtistName(release['artist-credit']),
     releaseDate: release.date ?? null,
+    hasCoverArt:
+      typeof release['cover-art-archive']?.front === 'boolean'
+        ? release['cover-art-archive'].front
+        : typeof release['cover-art-archive']?.artwork === 'boolean'
+          ? release['cover-art-archive'].artwork
+          : null,
     score: Number.parseInt(String(release.score ?? 0), 10)
   }));
 }
@@ -226,6 +236,10 @@ async function lookupReleaseCandidateByMbid(mbid: string): Promise<ImportCandida
     id: string;
     title?: string;
     date?: string;
+    'cover-art-archive'?: {
+      front?: boolean;
+      artwork?: boolean;
+    };
     'release-group'?: { id?: string };
     'artist-credit'?: unknown;
   };
@@ -236,6 +250,12 @@ async function lookupReleaseCandidateByMbid(mbid: string): Promise<ImportCandida
     title: release.title ?? 'Unknown Album',
     artist: pickArtistName(release['artist-credit']),
     releaseDate: release.date ?? null,
+    hasCoverArt:
+      typeof release['cover-art-archive']?.front === 'boolean'
+        ? release['cover-art-archive'].front
+        : typeof release['cover-art-archive']?.artwork === 'boolean'
+          ? release['cover-art-archive'].artwork
+          : null,
     score: 1000
   };
 }
@@ -258,6 +278,10 @@ async function lookupReleaseGroupCandidatesByMbid(mbid: string, limit: number): 
       id: string;
       title?: string;
       date?: string;
+      'cover-art-archive'?: {
+        front?: boolean;
+        artwork?: boolean;
+      };
       'release-group'?: { id?: string };
       'artist-credit'?: unknown;
     }>;
@@ -269,6 +293,12 @@ async function lookupReleaseGroupCandidatesByMbid(mbid: string, limit: number): 
     title: release.title ?? 'Unknown Album',
     artist: pickArtistName(release['artist-credit']),
     releaseDate: release.date ?? null,
+    hasCoverArt:
+      typeof release['cover-art-archive']?.front === 'boolean'
+        ? release['cover-art-archive'].front
+        : typeof release['cover-art-archive']?.artwork === 'boolean'
+          ? release['cover-art-archive'].artwork
+          : null,
     score: 950
   }));
 }
