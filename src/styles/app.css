@@ -552,6 +552,34 @@ a {
   color: #a5b2c2;
 }
 
+.cover-art-status {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.18rem 0.62rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.cover-art-status--available {
+  color: #5ee0a8;
+  border: 1px solid rgba(55, 194, 135, 0.45);
+  background: linear-gradient(90deg, rgba(55, 194, 135, 0.24), rgba(16, 185, 129, 0.1));
+  box-shadow: 0 0 0 1px rgba(94, 224, 168, 0.12), 0 4px 14px rgba(55, 194, 135, 0.2);
+}
+
+.cover-art-status--missing {
+  color: #93a1b3;
+  border: 1px solid rgba(96, 117, 145, 0.38);
+  background: rgba(18, 28, 43, 0.45);
+}
+
+.cover-art-status--unknown {
+  color: #c7d2e1;
+  border: 1px solid rgba(130, 154, 186, 0.42);
+  background: rgba(29, 42, 63, 0.5);
+}
+
 .print-body {
   margin: 0;
   background: #f4f7fb;

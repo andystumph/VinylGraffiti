@@ -24,5 +24,6 @@ export interface ImportCandidate {
   title: string;
   artist: string;
   releaseDate: string | null;
+  hasCoverArt: boolean | null;
   score: number;
 }

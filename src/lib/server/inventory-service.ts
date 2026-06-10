@@ -1,15 +1,19 @@
 import { z } from 'zod';
 import { getDb } from './db';
 import { getCache, setCache } from './cache';
-import { cacheThumbnailForRelease, getCoverArtThumbnail } from './coverart-client';
+import { getCachedCoverUrl, getCoverArtThumbnail } from './coverart-client';
 import { getReleaseDetails, getReleaseMetadataDetails, searchReleaseCandidates } from './musicbrainz-client';
 import { hasQuery, normalizeQuery, wildcard } from './search-utils';
-import type { InventoryItemRow, MediaType } from './types';
+import type { ImportCandidate, InventoryItemRow, MediaType } from './types';
 
 const mediaTypeSchema = z.enum(['vinyl', 'cassette', 'cd']);
 
 const addFromMusicBrainzSchema = z.object({
   releaseMbid: z.uuid(),
+  releaseGroupMbid: z.uuid().nullable().optional(),
+  title: z.string().trim().min(1).max(250).optional(),
+  artist: z.string().trim().min(1).max(250).optional(),
+  releaseDate: z.string().trim().max(50).nullable().optional(),
   mediaType: mediaTypeSchema,
   allowDuplicate: z.boolean().optional(),
   condition: z.string().trim().max(80).optional(),
@@ -135,15 +139,42 @@ export async function getImportCandidates(query: string) {
     return [];
   }
 
-  const key = `mb-search:v6:${normalized}`;
+  const key = `mb-search:v7:${normalized}`;
   const cached = getCache<Awaited<ReturnType<typeof searchReleaseCandidates>>>(key);
   if (cached) {
     return cached;
   }
 
   const results = await searchReleaseCandidates(normalized, 25);
-  setCache(key, results, 600);
-  return results;
+  const enriched = await enrichCoverAvailability(results);
+  setCache(key, enriched, 600);
+  return enriched;
+}
+
+async function enrichCoverAvailability(candidates: ImportCandidate[]): Promise<ImportCandidate[]> {
+  // MusicBrainz search responses usually omit cover-art metadata; enrich top rows with cached CAA checks.
+  const checkedCount = Math.min(candidates.length, 10);
+  if (checkedCount === 0) {
+    return candidates;
+  }
+
+  const enriched = [...candidates];
+  await Promise.all(
+    enriched.slice(0, checkedCount).map(async (candidate, index) => {
+      const cacheKey = `cover-available:v1:${candidate.releaseMbid}`;
+      const cached = getCache<boolean>(cacheKey);
+      if (cached !== null) {
+        enriched[index] = { ...candidate, hasCoverArt: cached };
+        return;
+      }
+
+      const hasCover = Boolean(getCachedCoverUrl(candidate.releaseMbid) ?? (await getCoverArtThumbnail(candidate.releaseMbid)));
+      setCache(cacheKey, hasCover, 7 * 24 * 3600);
+      enriched[index] = { ...candidate, hasCoverArt: hasCover };
+    })
+  );
+
+  return enriched;
 }
 
 export async function addInventoryFromMusicBrainz(input: unknown): Promise<
@@ -158,14 +189,24 @@ export async function addInventoryFromMusicBrainz(input: unknown): Promise<
   const detailsKey = `mb-release:${parsed.releaseMbid}`;
   const coverKey = `cover-release:${parsed.releaseMbid}`;
 
+  const hasInlineDetails = Boolean(parsed.title && parsed.artist);
   const details =
+    (hasInlineDetails
+      ? {
+          releaseMbid: parsed.releaseMbid,
+          releaseGroupMbid: parsed.releaseGroupMbid ?? null,
+          title: parsed.title!,
+          artist: parsed.artist!,
+          releaseDate: parsed.releaseDate ?? null
+        }
+      : null) ??
     getCache<Awaited<ReturnType<typeof getReleaseDetails>>>(detailsKey) ??
     (await getReleaseDetails(parsed.releaseMbid));
   setCache(detailsKey, details, 24 * 3600);
 
   const coverThumbUrl =
     getCache<string | null>(coverKey) ??
-    (await cacheThumbnailForRelease(parsed.releaseMbid)) ??
+    getCachedCoverUrl(parsed.releaseMbid) ??
     (await getCoverArtThumbnail(parsed.releaseMbid));
   setCache(coverKey, coverThumbUrl, 7 * 24 * 3600);
 
