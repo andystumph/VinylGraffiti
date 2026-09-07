@@ -17,7 +17,7 @@ const createWantListItemSchema = z.object({
   artist: z.string().trim().min(1).max(250),
   title: z.string().trim().min(1).max(250),
   mediaType: z.enum(['vinyl', 'cassette', 'cd']).optional().nullable(),
-  notes: z.string().trim().max(2000).optional(),
+  notes: z.string().trim().max(2000).optional().nullable(),
   allowDuplicate: z.boolean().optional()
 });
 
